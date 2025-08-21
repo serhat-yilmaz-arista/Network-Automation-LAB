@@ -1,0 +1,113 @@
+p2p_links:
+  - leaf_hostname: s1-leaf1
+    spine_hostname: s1-spine1
+    leaf_interface: Ethernet2
+    spine_interface: Ethernet2
+    leaf_ip: 10.0.0.1/30
+    spine_ip: 10.0.0.2/30
+
+  - leaf_hostname: s1-leaf1
+    spine_hostname: s1-spine2
+    leaf_interface: Ethernet3
+    spine_interface: Ethernet2
+    leaf_ip: 10.0.0.5/30
+    spine_ip: 10.0.0.6/30
+
+  - leaf_hostname: s1-leaf2
+    spine_hostname: s1-spine1
+    leaf_interface: Ethernet2
+    spine_interface: Ethernet3
+    leaf_ip: 10.0.0.9/30
+    spine_ip: 10.0.0.10/30
+
+  - leaf_hostname: s1-leaf2
+    spine_hostname: s1-spine2
+    leaf_interface: Ethernet3
+    spine_interface: Ethernet3
+    leaf_ip: 10.0.0.13/30
+    spine_ip: 10.0.0.14/30
+
+  - leaf_hostname: s1-leaf3
+    spine_hostname: s1-spine1
+    leaf_interface: Ethernet2
+    spine_interface: Ethernet4
+    leaf_ip: 10.0.0.17/30
+    spine_ip: 10.0.0.18/30
+
+  - leaf_hostname: s1-leaf3
+    spine_hostname: s1-spine2
+    leaf_interface: Ethernet3
+    spine_interface: Ethernet4
+    leaf_ip: 10.0.0.21/30
+    spine_ip: 10.0.0.22/30
+
+  - leaf_hostname: s1-leaf4
+    spine_hostname: s1-spine1
+    leaf_interface: Ethernet2
+    spine_interface: Ethernet5
+    leaf_ip: 10.0.0.25/30
+    spine_ip: 10.0.0.26/30
+
+  - leaf_hostname: s1-leaf4
+    spine_hostname: s1-spine2
+    leaf_interface: Ethernet3
+    spine_interface: Ethernet5
+    leaf_ip: 10.0.0.29/30
+    spine_ip: 10.0.0.30/30
+
+  - leaf_hostname: s2-leaf1
+    spine_hostname: s2-spine1
+    leaf_interface: Ethernet2
+    spine_interface: Ethernet2
+    leaf_ip: 10.0.0.33/30
+    spine_ip: 10.0.0.34/30
+
+  - leaf_hostname: s2-leaf1
+    spine_hostname: s2-spine2
+    leaf_interface: Ethernet3
+    spine_interface: Ethernet2
+    leaf_ip: 10.0.0.37/30
+    spine_ip: 10.0.0.38/30
+
+  - leaf_hostname: s2-leaf2
+    spine_hostname: s2-spine1
+    leaf_interface: Ethernet2
+    spine_interface: Ethernet3
+    leaf_ip: 10.0.0.41/30
+    spine_ip: 10.0.0.42/30
+
+  - leaf_hostname: s2-leaf2
+    spine_hostname: s2-spine2
+    leaf_interface: Ethernet3
+    spine_interface: Ethernet3
+    leaf_ip: 10.0.0.45/30
+    spine_ip: 10.0.0.46/30
+
+  - leaf_hostname: s2-leaf3
+    spine_hostname: s2-spine1
+    leaf_interface: Ethernet2
+    spine_interface: Ethernet4
+    leaf_ip: 10.0.0.49/30
+    spine_ip: 10.0.0.50/30
+
+  - leaf_hostname: s2-leaf3
+    spine_hostname: s2-spine2
+    leaf_interface: Ethernet3
+    spine_interface: Ethernet4
+    leaf_ip: 10.0.0.53/30
+    spine_ip: 10.0.0.54/30
+
+  - leaf_hostname: s2-leaf4
+    spine_hostname: s2-spine1
+    leaf_interface: Ethernet2
+    spine_interface: Ethernet5
+    leaf_ip: 10.0.0.57/30
+    spine_ip: 10.0.0.58/30
+
+  - leaf_hostname: s2-leaf4
+    spine_hostname: s2-spine2
+    leaf_interface: Ethernet3
+    spine_interface: Ethernet5
+    leaf_ip: 10.0.0.61/30
+    spine_ip: 10.0.0.62/30
+
