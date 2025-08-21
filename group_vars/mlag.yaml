@@ -1,0 +1,112 @@
+mlag:
+  s1-leaf1:
+    vlan: 4094
+    trunk_group: MLAG-Peer
+    local_ip: 172.16.255.1
+    peer_ip: 172.16.255.2
+    prefix: 30
+    peer_link_po: 10
+    peer_interfaces: [Ethernet1, Ethernet6]
+    domain_id: S1-Leaf1&Leaf2
+    mlag_interfaces:
+      - id: 1
+        description: "Connected_to_s1-host1"
+        members: [Ethernet4]
+
+  s1-leaf2:
+    vlan: 4094
+    trunk_group: MLAG-Peer
+    local_ip: 172.16.255.2
+    peer_ip: 172.16.255.1
+    prefix: 30
+    peer_link_po: 10
+    peer_interfaces: [Ethernet1, Ethernet6]
+    domain_id: S1-Leaf1&Leaf2
+    mlag_interfaces:
+      - id: 1
+        description: "Connected_to_s1-host1"
+        members: [Ethernet4]
+
+  s1-leaf3:
+    vlan: 4094
+    trunk_group: MLAG-Peer
+    local_ip: 172.16.255.5
+    peer_ip: 172.16.255.6
+    prefix: 30
+    peer_link_po: 10
+    peer_interfaces: [Ethernet1, Ethernet6]
+    domain_id: S1-Leaf3&Leaf4
+    mlag_interfaces:
+      - id: 1
+        description: "Connected_to_s1-host2"
+        members: [Ethernet4]
+
+  s1-leaf4:
+    vlan: 4094
+    trunk_group: MLAG-Peer
+    local_ip: 172.16.255.6
+    peer_ip: 172.16.255.5
+    prefix: 30
+    peer_link_po: 10
+    peer_interfaces: [Ethernet1, Ethernet6]
+    domain_id: S1-Leaf3&Leaf4
+    mlag_interfaces:
+      - id: 1
+        description: "Connected_to_s1-host2"
+        members: [Ethernet4]
+
+  s2-leaf1:
+    vlan: 4094
+    trunk_group: MLAG-Peer
+    local_ip: 172.16.255.9
+    peer_ip: 172.16.255.10
+    prefix: 30
+    peer_link_po: 10
+    peer_interfaces: [Ethernet1, Ethernet6]
+    domain_id: S2-Leaf1&Leaf2
+    mlag_interfaces:
+      - id: 1
+        description: "Connected_to_s2-host1"
+        members: [Ethernet4]
+
+  s2-leaf2:
+    vlan: 4094
+    trunk_group: MLAG-Peer
+    local_ip: 172.16.255.10
+    peer_ip: 172.16.255.9
+    prefix: 30
+    peer_link_po: 10
+    peer_interfaces: [Ethernet1, Ethernet6]
+    domain_id: S2-Leaf1&Leaf2
+    mlag_interfaces:
+      - id: 1
+        description: "Connected_to_s2-host1"
+        members: [Ethernet4]
+
+  s2-leaf3:
+    vlan: 4094
+    trunk_group: MLAG-Peer
+    local_ip: 172.16.255.13
+    peer_ip: 172.16.255.14
+    prefix: 30
+    peer_link_po: 10
+    peer_interfaces: [Ethernet1, Ethernet6]
+    domain_id: S2-Leaf3&Leaf4
+    mlag_interfaces:
+      - id: 1
+        description: "Connected_to_s2-host2"
+        members: [Ethernet4]
+
+  s2-leaf4:
+    vlan: 4094
+    trunk_group: MLAG-Peer
+    local_ip: 172.16.255.14
+    peer_ip: 172.16.255.13
+    prefix: 30
+    peer_link_po: 10
+    peer_interfaces: [Ethernet1, Ethernet6]
+    domain_id: S2-Leaf3&Leaf4
+    mlag_interfaces:
+      - id: 1
+        description: "Connected_to_s2-host2"
+        members: [Ethernet4]
