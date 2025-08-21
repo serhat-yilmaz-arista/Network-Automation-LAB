@@ -1,0 +1,47 @@
+all:
+  children:
+    DC1:
+      children:
+        DC1_spines:
+          hosts:
+            s1-spine1:
+              ansible_host: 192.168.0.10
+            s1-spine2:
+              ansible_host: 192.168.0.11
+        DC1_leafs:
+          children:
+            DC1_rack01:
+              hosts:
+                s1-leaf1:
+                  ansible_host: 192.168.0.12
+                s1-leaf2:
+                  ansible_host: 192.168.0.13
+            DC1_rack02:
+              hosts:
+                s1-leaf3:
+                  ansible_host: 192.168.0.14
+                s1-leaf4:
+                  ansible_host: 192.168.0.15
+    DC2:
+      children:
+        DC2_spines:
+          hosts:
+            s2-spine1:
+              ansible_host: 192.168.0.20
+            s2-spine2:
+              ansible_host: 192.168.0.21
+        DC2_leafs:
+          children:
+            DC2_rack01:
+              hosts:
+                s2-leaf1:
+                  ansible_host: 192.168.0.22
+                s2-leaf2:
+                  ansible_host: 192.168.0.23
+            DC2_rack02:
+              hosts:
+                s2-leaf3:
+                  ansible_host: 192.168.0.24
+                s2-leaf4:
+                  ansible_host: 192.168.0.25 
+
