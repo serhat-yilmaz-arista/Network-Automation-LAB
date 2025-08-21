@@ -1,0 +1,156 @@
+---
+- name: Adding Banner to all switches
+  hosts: all 
+  gather_facts: no
+  vars:
+    subtask_number: "1"
+
+  tasks:
+    - name: Ensure backup directory exists
+      ansible.builtin.file:
+        path: "./backup"
+        state: directory
+        mode: '0755' 
+      run_once: true
+
+    - name: Retrieve running configuration for backup
+      arista.eos.eos_command:
+        commands:
+          - show running-config
+      register: running_config_for_backup
+
+    - name: Save running configuration to local backup file
+      ansible.builtin.copy:
+        content: "{{ running_config_for_backup.stdout }}" 
+        dest: "./backup/{{ inventory_hostname }}_subtask_{{ subtask_number }}_backup.cfg"
+
+    - name: Get Management IP
+      arista.eos.eos_command:
+        commands:
+          - show ip interface brief | json
+      register: management_IP_output
+    - set_fact:
+        management_IP: "{{ management_IP_output.stdout_lines[0].interfaces.Management0.interfaceAddress.ipAddr.address }}"
+    
+    - name: Get MAC Address
+      arista.eos.eos_command:
+        commands:
+          - show version | json
+      register: MAC_address_output
+    - set_fact:
+        MAC_Address: "{{ MAC_address_output.stdout_lines[0].systemMacAddress }}"
+    
+    - name: Add Banner to each switch including hostname, Management IP, and MAC address
+      arista.eos.eos_config:
+        lines:
+          - "configure terminal"
+          - "banner login"
+          - "------- Welcome to {{ inventory_hostname }} -------"
+          - "Management IP: {{ management_IP }}"
+          - "MAC Address: {{ MAC_Address }}"
+          - "------------------------------------"
+          - "EOF"   
+
+
+
+- name: Configure P2P IP Addresses on Switches
+  hosts: all 
+  gather_facts: no 
+  vars:
+    subtask_number: "2" 
+  vars_files:
+    - vars/p2p_links_vars.yaml
+
+  tasks:
+    - name: Ensure backup directory exists
+      ansible.builtin.file:
+        path: "./backup"
+        state: directory
+        mode: '0755' 
+      run_once: true
+
+    - name: Retrieve running configuration for backup
+      arista.eos.eos_command:
+        commands:
+          - show running-config
+      register: running_config_for_backup
+
+    - name: Save running configuration to local backup file
+      ansible.builtin.copy:
+        content: "{{ running_config_for_backup.stdout }}" 
+        dest: "./backup/{{ inventory_hostname }}_subtask_{{ subtask_number }}_backup.cfg"
+
+    - name: Configure P2P interfaces on Leaf switches
+      arista.eos.eos_config:
+        lines:
+          - "interface {{ item.leaf_interface }}" 
+          - "no switchport" 
+          - "ip address {{ item.leaf_ip }}"
+          - "description Link_to_{{ item.spine_hostname }}_{{ item.spine_interface }}" 
+        parents: "interface {{ item.leaf_interface }}" 
+      when: inventory_hostname == item.leaf_hostname 
+      loop: "{{ p2p_links }}" 
+
+    - name: Configure P2P interfaces on Spine switches
+      arista.eos.eos_config:
+        lines:
+          - "interface {{ item.spine_interface }}" 
+          - "no switchport" 
+          - "ip address {{ item.spine_ip }}" 
+          - "description Link_to_{{ item.leaf_hostname }}_{{ item.leaf_interface }}"
+        parents: "interface {{ item.spine_interface }}" 
+      when: inventory_hostname == item.spine_hostname 
+      loop: "{{ p2p_links }}" 
+
+
+
+- name: Configure MLAG on Leaf Switches
+  hosts: DC1_leafs, DC2_leafs 
+  gather_facts: no 
+  vars:
+    subtask_number: "3"
+  vars_files:
+    - group_vars/mlag.yaml
+
+  tasks:
+    - name: Ensure backup directory exists
+      ansible.builtin.file:
+        path: "./backup"
+        state: directory
+        mode: '0755' 
+      run_once: true
+
+    - name: Retrieve running configuration for backup
+      arista.eos.eos_command:
+        commands:
+          - show running-config
+      register: running_config_for_backup
+
+    - name: Save running configuration to local backup file
+      ansible.builtin.copy:
+        content: "{{ running_config_for_backup.stdout }}" 
+        dest: "./backup/{{ inventory_hostname }}_subtask_{{ subtask_number }}_backup.cfg"
+
+    - name: Ensure configs directory exists
+      ansible.builtin.file:
+        path: "./configs"
+        state: directory
+        mode: '0755' 
+      run_once: true
+     
+    - name: Generate MLAG configuration for {{ inventory_hostname }}
+      ansible.builtin.template:
+        src: templates/mlag_config.j2
+        dest: "./configs/{{ inventory_hostname }}_mlag.cfg"
+
+    - name: Push MLAG configuration to {{ inventory_hostname }}
+      arista.eos.eos_config:
+        src: "./configs/{{ inventory_hostname }}_mlag.cfg"
+        backup: yes
+        backup_options:
+          dir_path: "./backup/{{ inventory_hostname }}-mlag"
+      register: config_result
+
+    - name: Display status of configuration push for {{ inventory_hostname }}
+      ansible.builtin.debug:
+        msg: "Configuration status for {{ inventory_hostname }}: {{ 'changed' if config_result.changed else 'ok' }}"
