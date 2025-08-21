@@ -1,0 +1,4 @@
+ansible_user: arista
+ansible_password: 040b9i5jjc985oay
+ansible_network_os: eos
+ansible_connection: httpapi
