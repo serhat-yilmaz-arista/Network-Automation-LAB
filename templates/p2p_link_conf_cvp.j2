@@ -1,13 +1,13 @@
 !
 {% for link in p2p_links %}
-{%     if inventory_hostname == link.leaf_hostname %}
+{%     if device_hostname == link.leaf_hostname %}
 interface {{ link.leaf_interface }}
    description P2P link to {{ link.spine_hostname }}
    no switchport
    ip address {{ link.leaf_ip }}
    no shutdown
 !
-{%     elif inventory_hostname == link.spine_hostname %}
+{%     elif device_hostname == link.spine_hostname %}
 interface {{ link.spine_interface }}
    description P2P link to {{ link.leaf_hostname }}
    no switchport
