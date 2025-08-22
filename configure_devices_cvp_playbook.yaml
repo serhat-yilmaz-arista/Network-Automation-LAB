@@ -1,0 +1,85 @@
+---
+- name: Getting backups from all switches before running configuration
+  hosts: DC1, DC2 
+  gather_facts: no
+  vars:
+    subtask_number: "1"
+
+  tasks:
+    - name: Ensure backup directory exists
+      ansible.builtin.file:
+        path: "./backup_CVP"
+        state: directory
+        mode: '0755' 
+      run_once: true
+
+    - name: Retrieve running configuration for backup
+      arista.eos.eos_command:
+        commands:
+          - show running-config
+      register: running_config_for_backup
+
+    - name: Save running configuration to local backup file
+      ansible.builtin.copy:
+        content: "{{ running_config_for_backup.stdout }}" 
+        dest: "./backup_CVP/{{ inventory_hostname }}_subtask_{{ subtask_number }}_backup.cfg"
+#
+#
+#
+- name: Adding Banner to all switches via CVP
+  hosts: cvp
+  gather_facts: no
+
+  tasks:
+    - name: Gather CVP device facts
+      arista.cvp.cv_facts_v3:
+        facts:
+          - devices
+      register: cvp_facts
+
+    - name: Create banner configlets only for devices in inventory
+      arista.cvp.cv_configlet_v3:
+        configlets: "{{ { 'BANNER-' ~ item.hostname : banner_config } }}"
+        state: present
+      loop: "{{ cvp_facts.data.cvp_devices }}"
+      when: item.hostname in (groups['DC1'] + groups['DC2'])
+      vars:
+        banner_config: |
+          !
+          banner login
+          This device: {{ item.hostname }}
+          Serial Number: {{ item.serialNumber }}
+          Managed via Arista CVP.
+          EOF
+          !
+
+    - name: Attach banner configlet to devices
+      arista.cvp.cv_device_v3:
+        devices:
+          - fqdn: "{{ item.fqdn }}"
+            parentContainerName: "{{ item.parentContainerName }}"
+            configlets: "{{ item.configlets + ['BANNER-' + item.hostname] }}"
+            state: present
+        search_key: fqdn
+      loop: "{{ cvp_facts.data.cvp_devices }}"
+      when: item.hostname in (groups['DC1'] + groups['DC2'])
+
+    - name: Gather pending tasks from CVP
+      arista.cvp.cv_facts_v3:
+        facts:
+          - tasks
+      register: cvp_task_facts
+
+    - name: Build list of pending task IDs
+      set_fact:
+        pending_task_ids: "{{ cvp_task_facts.data.cvp_tasks | dict2items | map(attribute='key') | list }}"
+
+    - name: Execute pending tasks on CVP
+      arista.cvp.cv_task_v3:
+        tasks: "{{ pending_task_ids }}"
+        state: executed
+      register: executed_tasks
+
+    - name: Show executed CVP tasks
+      debug:
+        var: executed_tasks
