@@ -50,9 +50,9 @@
           - "MAC Address: {{ MAC_Address }}"
           - "------------------------------------"
           - "EOF"   
-
-
-
+#
+#
+#
 - name: Configure P2P IP Addresses on Switches
   hosts: all 
   gather_facts: no 
@@ -101,9 +101,9 @@
         parents: "interface {{ item.spine_interface }}" 
       when: inventory_hostname == item.spine_hostname 
       loop: "{{ p2p_links }}" 
-
-
-
+#
+#
+#
 - name: Configure MLAG on Leaf Switches
   hosts: DC1_leafs, DC2_leafs 
   gather_facts: no 
