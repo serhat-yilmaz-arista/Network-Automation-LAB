@@ -181,5 +181,89 @@
 #
 #
 #
+- name: Getting backups from all switches before running configuration
+  hosts: DC1, DC2 
+  gather_facts: no
+  vars:
+    subtask_number: "3"
 
+  tasks:
+    - name: Ensure backup directory exists
+      ansible.builtin.file:
+        path: "./backup_CVP"
+        state: directory
+        mode: '0755' 
+      run_once: true
 
+    - name: Retrieve running configuration for backup
+      arista.eos.eos_command:
+        commands:
+          - show running-config
+      register: running_config_for_backup
+
+    - name: Save running configuration to local backup file
+      ansible.builtin.copy:
+        content: "{{ running_config_for_backup.stdout }}" 
+        dest: "./backup_CVP/{{ inventory_hostname }}_subtask_{{ subtask_number }}_backup.cfg"
+#
+#
+#
+- name: Configure MLAG on Leaf Switches
+  hosts: cvp
+  gather_facts: no
+  vars_files:
+    - group_vars/mlag.yaml
+
+  tasks:
+    - name: Gather CVP device facts
+      arista.cvp.cv_facts_v3:
+        facts:
+          - devices
+      register: cvp_facts
+
+    - name: Generate MLAG configlet for each Leaf Devices
+      template:
+        src: templates/mlag_cvp_config.j2
+        dest: /tmp/MLAG-{{ item.hostname }}.cfg
+      loop: "{{ cvp_facts.data.cvp_devices }}"
+      when: item.hostname in groups['DC1_leafs'] + groups['DC2_leafs']
+      vars:
+        device_hostname: "{{ item.hostname }}"
+
+    - name: Create MLAG configlets on CVP
+      arista.cvp.cv_configlet_v3:
+        configlets: "{{ { 'MLAG-' ~ item.hostname : lookup('file', '/tmp/MLAG-' ~ item.hostname ~ '.cfg') } }}"
+        state: present
+      loop: "{{ cvp_facts.data.cvp_devices }}"
+      when: item.hostname in groups['DC1_leafs'] + groups['DC2_leafs']
+
+    - name: Attach MLAG configlet to devices
+      arista.cvp.cv_device_v3:
+        devices:
+          - fqdn: "{{ item.fqdn }}"
+            parentContainerName: "{{ item.parentContainerName }}"
+            configlets: "{{ item.configlets + ['MLAG-' + item.hostname] }}"
+            state: present
+        search_key: fqdn
+      loop: "{{ cvp_facts.data.cvp_devices }}"
+      when: item.hostname in groups['DC1_leafs'] + groups['DC2_leafs']
+
+    - name: Gather pending tasks from CVP
+      arista.cvp.cv_facts_v3:
+        facts:
+          - tasks
+      register: cvp_task_facts
+
+    - name: Build list of pending task IDs
+      set_fact:
+        pending_task_ids: "{{ cvp_task_facts.data.cvp_tasks | dict2items | map(attribute='key') | list }}"
+
+    - name: Execute pending tasks on CVP
+      arista.cvp.cv_task_v3:
+        tasks: "{{ pending_task_ids }}"
+        state: executed
+      register: executed_tasks
+
+    - name: Show executed CVP tasks
+      debug:
+        var: executed_tasks
