@@ -1,0 +1,42 @@
+{% set m = mlag[device_hostname] %}
+
+vlan {{ m.vlan }}
+   trunk group {{ m.trunk_group }}
+!
+no spanning-tree vlan-id {{ m.vlan }}
+!
+interface Vlan{{ m.vlan }}
+   no autostate
+   ip address {{ m.local_ip }}/{{ m.prefix }}
+!
+interface Port-Channel{{ m.peer_link_po }}
+   no shutdown
+   switchport mode trunk
+   switchport trunk group {{ m.trunk_group }}
+!
+{% for intf in m.peer_interfaces %}
+interface {{ intf }}
+   channel-group {{ m.peer_link_po }} mode active
+   no shutdown
+!
+{% endfor %}
+mlag configuration
+   local-interface Vlan{{ m.vlan }}
+   peer-address {{ m.peer_ip }}
+   peer-link Port-Channel{{ m.peer_link_po }}
+   domain-id {{ m.domain_id }}
+!
+{% for po in m.mlag_interfaces %}
+interface Port-Channel{{ po.id }}
+   mlag {{ po.id }}
+{%     if po.description is defined and po.description is not none %}
+   description {{ po.description }}
+{%     endif %}
+!
+{%     for intf in po.members %}
+interface {{ intf }}
+   channel-group {{ po.id }} mode active
+   no shutdown
+!
+{%     endfor %}
+{% endfor %}
