@@ -1,4 +1,14 @@
 ansible_user: arista
 ansible_password: 040b9i5jjc985oay
+
+# EOS connection defaults
 ansible_network_os: eos
 ansible_connection: httpapi
+ansible_httpapi_use_ssl: true
+ansible_httpapi_validate_certs: false
+ansible_httpapi_port: 443
+
+# CVP connection vars
+cvp_user: arista
+cvp_pass: 040b9i5jjc985oay
+cvp_host: network-automation-1-72320d35-eos.topo.testdrive.arista.com
