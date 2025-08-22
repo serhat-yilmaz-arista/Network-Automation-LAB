@@ -45,3 +45,7 @@ all:
                 s2-leaf4:
                   ansible_host: 192.168.0.25 
 
+  hosts:
+    cvp:
+      ansible_host: network-automation-1-72320d35-eos.topo.testdrive.arista.com
+
