@@ -83,3 +83,103 @@
     - name: Show executed CVP tasks
       debug:
         var: executed_tasks
+#
+#
+#
+#
+#
+#
+- name: Getting backups from all switches before running configuration
+  hosts: DC1, DC2 
+  gather_facts: no
+  vars:
+    subtask_number: "2"
+
+  tasks:
+    - name: Ensure backup directory exists
+      ansible.builtin.file:
+        path: "./backup_CVP"
+        state: directory
+        mode: '0755' 
+      run_once: true
+
+    - name: Retrieve running configuration for backup
+      arista.eos.eos_command:
+        commands:
+          - show running-config
+      register: running_config_for_backup
+
+    - name: Save running configuration to local backup file
+      ansible.builtin.copy:
+        content: "{{ running_config_for_backup.stdout }}" 
+        dest: "./backup_CVP/{{ inventory_hostname }}_subtask_{{ subtask_number }}_backup.cfg"
+#
+#
+#
+- name: Configure P2P links on all leafs and spines
+  hosts: cvp
+  gather_facts: no
+  vars_files:
+    - vars/p2p_links_vars.yaml
+
+  tasks:
+    - name: Gather CVP device facts
+      arista.cvp.cv_facts_v3:
+        facts:
+          - devices
+      register: cvp_facts
+
+    - name: Generate P2P configlet for each device
+      template:
+        src: templates/p2p_link_conf_cvp.j2
+        dest: /tmp/P2P-{{ item.hostname }}.cfg
+      loop: "{{ cvp_facts.data.cvp_devices }}"
+      when: item.hostname in groups['DC1'] + groups['DC2']
+      vars:
+        device_hostname: "{{ item.hostname }}"
+
+    - name: Create P2P configlets on CVP
+      arista.cvp.cv_configlet_v3:
+        configlets: "{{ { 'P2P-' ~ item.hostname : lookup('file', '/tmp/P2P-' ~ item.hostname ~ '.cfg') } }}"
+        state: present
+      loop: "{{ cvp_facts.data.cvp_devices }}"
+      when: item.hostname in groups['DC1'] + groups['DC2']
+
+    - name: Attach P2P configlet to devices
+      arista.cvp.cv_device_v3:
+        devices:
+          - fqdn: "{{ item.fqdn }}"
+            parentContainerName: "{{ item.parentContainerName }}"
+            configlets: "{{ item.configlets + ['P2P-' + item.hostname] }}"
+            state: present
+        search_key: fqdn
+      loop: "{{ cvp_facts.data.cvp_devices }}"
+      when: item.hostname in (groups['DC1'] + groups['DC2'])
+
+    - name: Gather pending tasks from CVP
+      arista.cvp.cv_facts_v3:
+        facts:
+          - tasks
+      register: cvp_task_facts
+
+    - name: Build list of pending task IDs
+      set_fact:
+        pending_task_ids: "{{ cvp_task_facts.data.cvp_tasks | dict2items | map(attribute='key') | list }}"
+
+    - name: Execute pending tasks on CVP
+      arista.cvp.cv_task_v3:
+        tasks: "{{ pending_task_ids }}"
+        state: executed
+      register: executed_tasks
+
+    - name: Show executed CVP tasks
+      debug:
+        var: executed_tasks
+#
+#
+#
+#
+#
+#
+
+
